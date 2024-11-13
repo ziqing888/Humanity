@@ -7,7 +7,7 @@ import config from './config.js';
 // 显示头部信息
 function displayHeader() {
     console.log(chalk.yellow('╔════════════════════════════════════════╗'));
-    console.log(chalk.yellow('║      🚀   自动每日领取 $RWT 🚀        ║'));
+    console.log(chalk.yellow('║      🚀   自动每日领取 $RWT 🚀         ║'));
     console.log(chalk.yellow('║  👤    脚本编写：子清                  ║'));
     console.log(chalk.yellow('║  📢  电报频道：https://t.me/ksqxszq    ║'));
     console.log(chalk.yellow('╚════════════════════════════════════════╝'));

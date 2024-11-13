@@ -6,7 +6,7 @@ const path = require('path');
 // 显示头部信息
 function displayHeader() {
     console.log(chalk.yellow('╔════════════════════════════════════════╗'));
-    console.log(chalk.yellow('║      🚀  自动领取 $RWT  🚀            ║'));
+    console.log(chalk.yellow('║      🚀  小草机器人  🚀               ║'));
     console.log(chalk.yellow('║  👤    脚本编写：子清                  ║'));
     console.log(chalk.yellow('║  📢  电报频道：https://t.me/ksqxszq    ║'));
     console.log(chalk.yellow('╚════════════════════════════════════════╝'));
@@ -111,4 +111,5 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
         await new Promise(resolve => setTimeout(resolve, 1000));  // 延时1秒
     }
 })();
+
 

@@ -19,7 +19,6 @@ async function setupBlockchainConnection(rpcUrl) {
     const web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
     try {
-        // 跳过 isListening 检查，直接返回 web3 实例
         const blockNumber = await web3.eth.getBlockNumber();
         console.log(chalk.green(`成功连接到 Humanity 协议区块链，当前区块号：${blockNumber}`));
     } catch (error) {
@@ -82,7 +81,7 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
             gasPrice: await web3.eth.getGasPrice(),
             data: contract.methods.claimReward().encodeABI(),
             nonce: await web3.eth.getTransactionCount(senderAddress),
-            chainId: await web3.eth.net.getId(),
+            chainId: 1942999413,  // 设置为正确的 chainId
         };
 
         const signedTxn = await web3.eth.accounts.signTransaction(transaction, privateKey);

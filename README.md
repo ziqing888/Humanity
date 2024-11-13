@@ -19,8 +19,8 @@
 首先，克隆项目仓库到本地：
 
 ```bash
-git clone <仓库地址>
-cd Humanity-bot
+git clone https://github.com/ziqing888/Humanity.git
+cd Humanity
 ```
 . 安装依赖
 在项目目录下执行以下命令来安装所需依赖

@@ -2,6 +2,7 @@ const Web3 = require('web3');
 const chalk = require('chalk');
 const fs = require('fs');
 const path = require('path');
+const { rpcUrl, contractAddress, contractAbi } = require('./config'); // 引入配置文件
 
 // 显示头部信息
 function displayHeader() {
@@ -97,13 +98,9 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
 // 主执行函数
 (async () => {
     displayHeader();
-    const rpcUrl = 'https://rpc.testnet.humanity.org';  // 更新为您的 RPC URL
     const web3 = await setupBlockchainConnection(rpcUrl);
 
-    const contractAddress = '0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7'; // 合约地址
-    const contractAbi = [ /* ABI 内容省略 */ ]; // 在这里插入您的合约 ABI
     const contract = new web3.eth.Contract(contractAbi, contractAddress);
-
     const privateKeys = loadPrivateKeys(path.join(__dirname, 'private_keys.txt'));
 
     for (const privateKey of privateKeys) {
@@ -111,5 +108,3 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
         await new Promise(resolve => setTimeout(resolve, 1000));  // 延时1秒
     }
 })();
-
-

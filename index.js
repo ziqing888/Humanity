@@ -93,3 +93,25 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
         console.log(chalk.red(`处理地址 ${senderAddress} 的领取奖励时出错：${error.message}`));
     }
 }
+
+// 主执行函数
+async function main() {
+    displayHeader();
+    const rpcUrl = config.rpcUrl || 'https://rpc.testnet.humanity.org'; // 使用配置中的 RPC 地址或默认 URL
+    const web3 = await setupBlockchainConnection(rpcUrl);
+    
+    const contract = new web3.eth.Contract(config.contractAbi, config.contractAddress);
+
+    // 每 6 小时循环一次
+    while (true) {
+        const privateKeys = loadPrivateKeys(config.privateKeysFile || './private_keys.txt'); // 指定文件路径或使用默认路径
+        for (const privateKey of privateKeys) {
+            await claimRewards(privateKey, web3, contract);
+        }
+
+        console.log(chalk.cyan('等待 6 小时后再运行一次...'));
+        await new Promise(resolve => setTimeout(resolve, 6 * 60 * 60 * 1000)); // 等待 6 小时
+    }
+}
+
+main().catch(error => console.error(chalk.red('主程序执行出错:', error)));

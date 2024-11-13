@@ -1,4 +1,3 @@
-// config.js
 
 module.exports = {
   rpcUrl: 'https://rpc.testnet.humanity.org', // 区块链节点URL（可以是主网或测试网）

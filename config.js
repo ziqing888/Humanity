@@ -1,5 +1,6 @@
 
-module.exports = {
+
+const config = {
   rpcUrl: 'https://rpc.testnet.humanity.org', // 区块链节点URL（可以是主网或测试网）
   contractAddress: '0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7', // 部署合约的地址
   contractAbi: [
@@ -30,3 +31,5 @@ module.exports = {
     { "inputs": [{ "internalType": "address", "name": "user", "type": "address" }], "name": "userGenesisClaimStatus", "outputs": [{ "internalType": "bool", "name": "status", "type": "bool" }], "stateMutability": "view", "type": "function" }
   ]
 };
+
+export default config;

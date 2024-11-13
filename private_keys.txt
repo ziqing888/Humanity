@@ -1,5 +1,4 @@
-每行一个私钥
-0xYourPrivateKey1
-0xYourPrivateKey2
-0xYourPrivateKey3
+PRIVATE_KEY_1
+PRIVATE_KEY_2
 ...
+

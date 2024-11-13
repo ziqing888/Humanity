@@ -46,8 +46,4 @@ npm start
 
 每次领取后，会延时 1 秒，以防止频繁操作导致网络拥堵。
 
-作者
 
-子清
-
-Telegram: https://t.me/ksqxszq

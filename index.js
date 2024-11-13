@@ -2,7 +2,7 @@ const Web3 = require('web3');
 const chalk = require('chalk');
 const fs = require('fs');
 const path = require('path');
-const { rpcUrl, contractAddress, contractAbi } = require('./config'); // 引入配置文件
+const config = require('./config');
 
 // 显示头部信息
 function displayHeader() {
@@ -22,7 +22,7 @@ async function setupBlockchainConnection(rpcUrl) {
         console.log(chalk.green("已连接到人类协议"));
     } else {
         console.log(chalk.red("连接失败。"));
-        process.exit(1);  // 如果连接失败，则退出
+        process.exit(1);
     }
     return web3;
 }
@@ -31,7 +31,7 @@ async function setupBlockchainConnection(rpcUrl) {
 function loadPrivateKeys(filePath) {
     if (!fs.existsSync(filePath)) {
         console.log(chalk.red(`错误: 文件 ${filePath} 不存在！`));
-        process.exit(1); // 如果文件不存在，退出程序
+        process.exit(1);
     }
     return fs.readFileSync(filePath, 'utf8').split('\n').filter(line => line.trim());
 }
@@ -98,13 +98,15 @@ async function processClaim(senderAddress, privateKey, web3, contract) {
 // 主执行函数
 (async () => {
     displayHeader();
-    const web3 = await setupBlockchainConnection(rpcUrl);
+    const web3 = await setupBlockchainConnection(config.rpcUrl);
 
-    const contract = new web3.eth.Contract(contractAbi, contractAddress);
+    const contract = new web3.eth.Contract(config.contractAbi, config.contractAddress);
+
     const privateKeys = loadPrivateKeys(path.join(__dirname, 'private_keys.txt'));
 
     for (const privateKey of privateKeys) {
         await claimRewards(privateKey, web3, contract);
-        await new Promise(resolve => setTimeout(resolve, 1000));  // 延时1秒
+        await new Promise(resolve => setTimeout(resolve, 1000));
     }
 })();
+

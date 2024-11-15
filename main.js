@@ -13,19 +13,19 @@ const timer = new CountdownTimer();
 
 // 常量
 const CONSTANTS = {
-  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 掩码
-  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 掩码
-  RPC_URL: "https://rpc.testnet.humanity.org/", // 掩码
-  MIN_GAS_PRICE: "1000000000",
-  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 掩码
-  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH 单位为 wei
-  MIN_BALANCE_FOR_REWARD: 0.001,
-  MIN_BALANCE_FOR_BRIDGE: 1.1,
-  DEFAULT_GAS_LIMIT: "300000",
-  GAS_PRICE_MULTIPLIER: 1.2,
-  GAS_LIMIT_MULTIPLIER: 1.2,
-  WAIT_BETWEEN_WALLETS: 3000, // 3秒
-  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24小时
+  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 掩码地址
+  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 掩码地址
+  RPC_URL: "https://rpc.testnet.humanity.org/", // RPC 地址
+  MIN_GAS_PRICE: "1000000000", // 最小油价
+  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 水龙头 URL
+  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH（以 wei 为单位）
+  MIN_BALANCE_FOR_REWARD: 0.001, // 奖励所需的最低余额
+  MIN_BALANCE_FOR_BRIDGE: 1.1, // 桥接所需的最低余额
+  DEFAULT_GAS_LIMIT: "300000", // 默认 gas 限制
+  GAS_PRICE_MULTIPLIER: 1.2, // 油价乘数
+  GAS_LIMIT_MULTIPLIER: 1.2, // gas 限制乘数
+  WAIT_BETWEEN_WALLETS: 3000, // 每次钱包间等待 3 秒
+  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 每 24 小时等待一次
 };
 
 // 合约 ABI
@@ -58,10 +58,11 @@ const BRIDGE_ABI = [
 
 class HumanityClient {
   constructor() {
-    this.initializeWeb3();
-    this.initializeHeaders();
+    this.initializeWeb3(); // 初始化 Web3
+    this.initializeHeaders(); // 初始化请求头
   }
 
+  // 初始化 Web3
   initializeWeb3() {
     this.web3 = new Web3(new Web3.providers.HttpProvider(CONSTANTS.RPC_URL));
     this.contract = new this.web3.eth.Contract(
@@ -74,6 +75,7 @@ class HumanityClient {
     );
   }
 
+  // 初始化请求头
   initializeHeaders() {
     this.headers = {
       accept: "*/*",
@@ -94,6 +96,7 @@ class HumanityClient {
     };
   }
 
+  // 倒计时
   async countdown(seconds) {
     await timer.start(seconds, {
       message: colors.style("剩余时间: ", "timerCount"),
@@ -101,24 +104,27 @@ class HumanityClient {
     });
   }
 
+  // 格式化私钥
   formatPrivateKey(privateKey) {
     const trimmed = privateKey.trim();
     return trimmed.startsWith("0x") ? trimmed : `0x${trimmed}`;
   }
 
-  // 用于掩码敏感数据的方法
+  // 掩码地址
   maskAddress(address) {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
+  // 掩码交易哈希
   maskTxHash(hash) {
     if (!hash) return "";
     return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
   }
 
+  // 加载钱包
   async loadWallets() {
-    const privateFile = path.join(__dirname, "private_keys.txt");
+    const privateFile = path.join(__dirname, "data.txt");
 
     try {
       const privateKeys = fs
@@ -153,6 +159,7 @@ class HumanityClient {
     }
   }
 
+  // 获取余额
   async getBalance(address) {
     try {
       const balance = await this.web3.eth.getBalance(address);
@@ -162,6 +169,7 @@ class HumanityClient {
     }
   }
 
+  // 获取安全油价
   async getSafeGasPrice() {
     try {
       const gasPrice = await this.web3.eth.getGasPrice();
@@ -177,10 +185,11 @@ class HumanityClient {
     }
   }
 
+  // 记录交易详情
   logTransactionDetails(tx, gasPrice) {
     logger.info(colors.style("交易详情:", "menuTitle"));
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas 价格: ${colors.style(
+      `${colors.style(">", "menuBorder")} 油价: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
@@ -199,6 +208,7 @@ class HumanityClient {
     );
   }
 
+  // 记录桥接交易详情
   logBridgeDetails(tx, gasPrice, params) {
     logger.info(colors.style("桥接详情:", "menuTitle"));
     logger.info(
@@ -208,7 +218,7 @@ class HumanityClient {
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas 价格: ${colors.style(
+      `${colors.style(">", "menuBorder")} 油价: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
@@ -233,6 +243,7 @@ class HumanityClient {
     );
   }
 
+  // 申请奖励
   async claimTHP(address) {
     try {
       const response = await axios.post(
@@ -240,90 +251,49 @@ class HumanityClient {
         { address },
         { headers: this.headers }
       );
-
-      if (response.status === 200 && response.data.msg) {
-        const txHash = response.data.msg.split("Txhash: ")[1];
-        return { success: true, txHash };
+      if (response.data.status === "success") {
+        logger.info(colors.style("成功申请奖励", "rewardSuccess"));
+      } else {
+        logger.error(colors.style("申请奖励失败", "rewardError"));
       }
-      return { success: false, error: "无效的响应格式" };
     } catch (error) {
-      return { success: false, error: error.message };
+      logger.error(colors.style(`申请奖励失败: ${error.message}`, "rewardError"));
     }
   }
 
-  async claimReward(privateKey, address) {
+  // 自动桥接
+  async bridgeFunds(wallet, amount) {
     try {
-      // 检查余额
-      const balance = await this.getBalance(address);
-      if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_REWARD) {
-        return {
-          success: false,
-          error: `余额不足: ${balance} THP`,
-        };
-      }
-
-      // 设置交易参数
       const gasPrice = await this.getSafeGasPrice();
-      const tx = {
-        to: CONSTANTS.CONTRACT_ADDRESS,
-        data: this.contract.methods.claimReward().encodeABI(),
-        gas: CONSTANTS.DEFAULT_GAS_LIMIT,
-        gasPrice,
-        nonce: await this.web3.eth.getTransactionCount(address),
+      const params = {
+        destinationNetwork: 1,
+        destinationAddress: wallet.address,
+        amount: this.web3.utils.toWei(amount, "ether"),
+        token: "0xC8D45b05b7dD0C3E61a39661B2617FE1B5509B04", // 使用的代币合约地址
+        forceUpdateGlobalExitRoot: true,
+        permitData: "0x", // 此处可以填写额外参数
       };
 
-      // 签名交易
-      const signedTx = await this.web3.eth.accounts.signTransaction(
-        tx,
-        privateKey
-      );
-
-      // 发送交易
-      const receipt = await this.web3.eth.sendSignedTransaction(
-        signedTx.rawTransaction
-      );
-
-      this.logTransactionDetails(receipt, gasPrice);
-      return { success: true, txHash: this.maskTxHash(receipt.transactionHash) };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
-
-  async bridgeToMainNet(privateKey, fromAddress, toAddress, amount) {
-    try {
-      const bridgeAmount = this.web3.utils.toWei(amount, "ether");
-      const gasPrice = await this.getSafeGasPrice();
       const tx = {
-        from: fromAddress,
+        from: wallet.address,
         to: CONSTANTS.BRIDGE_CONTRACT,
-        data: this.bridgeContract.methods
-          .bridgeAsset(1, toAddress, bridgeAmount, CONSTANTS.CONTRACT_ADDRESS, true, "0x")
-          .encodeABI(),
-        gas: CONSTANTS.DEFAULT_GAS_LIMIT,
+        data: this.bridgeContract.methods.bridgeAsset(...Object.values(params)).encodeABI(),
         gasPrice,
-        nonce: await this.web3.eth.getTransactionCount(fromAddress),
+        gas: CONSTANTS.DEFAULT_GAS_LIMIT,
       };
 
       const signedTx = await this.web3.eth.accounts.signTransaction(
         tx,
-        privateKey
+        wallet.privateKey
       );
 
-      const receipt = await this.web3.eth.sendSignedTransaction(
-        signedTx.rawTransaction
-      );
-
-      this.logBridgeDetails(receipt, gasPrice, {
-        amount: bridgeAmount,
-        destinationAddress: toAddress,
-      });
-
-      return { success: true, txHash: this.maskTxHash(receipt.transactionHash) };
+      const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+      this.logBridgeDetails(receipt, gasPrice, params);
     } catch (error) {
-      return { success: false, error: error.message };
+      logger.error(colors.style(`桥接失败: ${error.message}`, "bridgeError"));
     }
   }
 }
 
 module.exports = HumanityClient;
+

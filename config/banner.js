@@ -1,5 +1,5 @@
-import figlet from "figlet"; 
-import { ColorTheme } from "./colors";  
+const figlet = require("figlet");
+const { ColorTheme } = require("./colors");
 
 const colors = new ColorTheme();
 
@@ -11,12 +11,16 @@ function displayBanner() {
     width: 100,
   });
 
-  console.log(colors.style('╔════════════════════════════════════════╗', 'border'));
-  console.log(colors.style('║      🚀   自动每日领取 $RWT 🚀         ║', 'header'));
-  console.log(colors.style('║  👤    脚本编写：子清                  ║', 'header'));
-  console.log(colors.style('║  📢  电报频道：https://t.me/ksqxszq    ║', 'link'));
-  console.log(colors.style('╚════════════════════════════════════════╝', 'border'));
+  console.log(colors.style(banner, "header"));  // 显示横幅
+  console.log(
+    colors.style("===============================================", "border")  // 边框
+  );
+  console.log(colors.style("编写：qklxsqf", "link"));  // GitHub 链接
+  console.log(colors.style("电报频道：https://t.me/ksqxszq", "link"));  // Telegram 链接
+  console.log(
+    colors.style("===============================================\n", "border")  // 边框
+  );
 }
 
-export default displayBanner; // 使用 export 导出
+module.exports = displayBanner;
 

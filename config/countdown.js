@@ -5,53 +5,53 @@ const colors = new ColorTheme();
 class CountdownTimer {
   constructor(options = {}) {
     this.options = {
-      showCursor: false, // 是否显示光标
+      showCursor: false, 
       colors: {
-        message: colors.colors.timerCount, // 消息颜色
-        timer: colors.colors.timerWarn,    // 倒计时颜色
-        reset: colors.colors.reset,        // 重置颜色
+        message: colors.colors.timerCount, 
+        timer: colors.colors.timerWarn,    
+        reset: colors.colors.reset,        
       },
-      format: "HH:mm:ss", // 默认时间格式
-      message: "剩余时间: ", // 默认消息
-      clearOnComplete: true, // 倒计时完成后是否清除
-      ...options, // 合并传入的配置选项
+      format: "HH:mm:ss", 
+      message: "剩余时间: ", 
+      clearOnComplete: true, 
+      ...options, 
     };
   }
 
   // 格式化时间
   formatTime(timeInSeconds, format = this.options.format) {
-    const hours = Math.floor(timeInSeconds / 3600); // 计算小时
-    const minutes = Math.floor((timeInSeconds % 3600) / 60); // 计算分钟
-    const seconds = timeInSeconds % 60; // 计算秒数
+    const hours = Math.floor(timeInSeconds / 3600); 
+    const minutes = Math.floor((timeInSeconds % 3600) / 60); 
+    const seconds = timeInSeconds % 60; 
 
-    const padNumber = (num) => num.toString().padStart(2, "0"); // 格式化为两位数字
+    const padNumber = (num) => num.toString().padStart(2, "0"); 
 
     switch (format.toUpperCase()) {
-      case "HH:MM:SS": // 格式：小时:分钟:秒
+      case "HH:MM:SS": 
         return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)}`;
-      case "MM:SS": // 格式：分钟:秒
+      case "MM:SS": 
         return `${padNumber(minutes)}:${padNumber(seconds)}`;
-      case "SS": // 格式：秒
+      case "SS": 
         return padNumber(seconds);
-      case "FULL": // 格式：小时h 分钟m 秒s
+      case "FULL": 
         return `${hours}h ${minutes}m ${seconds}s`;
-      case "COMPACT": // 简洁格式
+      case "COMPACT": 
         return hours > 0
           ? `${hours}h${minutes}m`
           : minutes > 0
           ? `${minutes}m${seconds}s`
           : `${seconds}s`;
       default:
-        return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)}`; // 默认格式
+        return `${padNumber(hours)}:${padNumber(minutes)}:${padNumber(seconds)}`; 
     }
   }
 
-  // 启动倒计时
+  
   async start(seconds, options = {}) {
-    const config = { ...this.options, ...options }; // 合并配置项
+    const config = { ...this.options, ...options }; 
 
     if (!config.showCursor) {
-      process.stdout.write("\x1B[?25l"); // 隐藏光标
+      process.stdout.write("\x1B[?25l"); 
     }
 
     const {
@@ -61,30 +61,30 @@ class CountdownTimer {
 
     try {
       for (let i = seconds; i > 0; i--) {
-        process.stdout.clearLine(0); // 清除当前行
-        process.stdout.cursorTo(0); // 将光标移动到行首
-        const timeString = this.formatTime(i, config.format); // 格式化时间
+        process.stdout.clearLine(0); 
+        process.stdout.cursorTo(0); 
+        const timeString = this.formatTime(i, config.format); 
         process.stdout.write(
-          `${messageColor}${message}${timerColor}${timeString}${reset}` // 输出带颜色的时间
+          `${messageColor}${message}${timerColor}${timeString}${reset}` 
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待1秒
+        await new Promise((resolve) => setTimeout(resolve, 1000)); 
       }
 
       if (config.clearOnComplete) {
-        process.stdout.clearLine(0); // 清除当前行
-        process.stdout.cursorTo(0); // 将光标移动到行首
+        process.stdout.clearLine(0); 
+        process.stdout.cursorTo(0); 
       }
     } finally {
       if (!config.showCursor) {
-        process.stdout.write("\x1B[?25h"); // 显示光标
+        process.stdout.write("\x1B[?25h"); 
       }
     }
   }
 
-  // 静态方法：启动倒计时
+  
   static async countdown(seconds, options = {}) {
     const timer = new CountdownTimer(options);
-    await timer.start(seconds); // 启动倒计时
+    await timer.start(seconds); 
   }
 }
 

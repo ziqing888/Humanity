@@ -1,5 +1,5 @@
 import figlet from "figlet"; 
-const { ColorTheme } = require("./colors");
+import { ColorTheme } from "./colors";  // 使用 import 替代 require
 
 const colors = new ColorTheme();
 
@@ -19,4 +19,3 @@ function displayBanner() {
 }
 
 export default displayBanner; // 使用 export 导出
-

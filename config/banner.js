@@ -1,5 +1,5 @@
 import figlet from "figlet"; 
-import { ColorTheme } from "./colors.js"; // 确保正确导入路径和扩展名
+const { ColorTheme } = require("./colors");
 
 const colors = new ColorTheme();
 
@@ -11,7 +11,6 @@ function displayBanner() {
     width: 100,
   });
 
-  // 更新为新的文本内容
   console.log(colors.style('╔════════════════════════════════════════╗', 'border'));
   console.log(colors.style('║      🚀   自动每日领取 $RWT 🚀         ║', 'header'));
   console.log(colors.style('║  👤    脚本编写：子清                  ║', 'header'));

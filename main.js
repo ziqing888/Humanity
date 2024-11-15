@@ -7,28 +7,28 @@ const displayBanner = require("./config/banner");
 const CountdownTimer = require("./config/countdown");
 const { ColorTheme } = require("./config/colors");
 
-// 初始化工具
+// Initialize utilities
 const colors = new ColorTheme();
 const timer = new CountdownTimer();
 
-// 常量
+// Constants
 const CONSTANTS = {
-  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 掩码地址
-  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 掩码地址
-  RPC_URL: "https://rpc.testnet.humanity.org/", // RPC 地址
-  MIN_GAS_PRICE: "1000000000", // 最小油价
-  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 水龙头 URL
-  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH（以 wei 为单位）
-  MIN_BALANCE_FOR_REWARD: 0.001, // 奖励所需的最低余额
-  MIN_BALANCE_FOR_BRIDGE: 1.1, // 桥接所需的最低余额
-  DEFAULT_GAS_LIMIT: "300000", // 默认 gas 限制
-  GAS_PRICE_MULTIPLIER: 1.2, // 油价乘数
-  GAS_LIMIT_MULTIPLIER: 1.2, // gas 限制乘数
-  WAIT_BETWEEN_WALLETS: 3000, // 每次钱包间等待 3 秒
-  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 每 24 小时等待一次
+  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // Masked
+  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // Masked
+  RPC_URL: "https://rpc.testnet.humanity.org/", // Masked
+  MIN_GAS_PRICE: "1000000000",
+  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // Masked
+  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH in wei
+  MIN_BALANCE_FOR_REWARD: 0.001,
+  MIN_BALANCE_FOR_BRIDGE: 1.1,
+  DEFAULT_GAS_LIMIT: "300000",
+  GAS_PRICE_MULTIPLIER: 1.2,
+  GAS_LIMIT_MULTIPLIER: 1.2,
+  WAIT_BETWEEN_WALLETS: 3000, // 3 seconds
+  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24 hours
 };
 
-// 合约 ABI
+// Contract ABIs
 const CONTRACT_ABI = [
   {
     inputs: [],
@@ -58,11 +58,10 @@ const BRIDGE_ABI = [
 
 class HumanityClient {
   constructor() {
-    this.initializeWeb3(); // 初始化 Web3
-    this.initializeHeaders(); // 初始化请求头
+    this.initializeWeb3();
+    this.initializeHeaders();
   }
 
-  // 初始化 Web3
   initializeWeb3() {
     this.web3 = new Web3(new Web3.providers.HttpProvider(CONSTANTS.RPC_URL));
     this.contract = new this.web3.eth.Contract(
@@ -75,7 +74,6 @@ class HumanityClient {
     );
   }
 
-  // 初始化请求头
   initializeHeaders() {
     this.headers = {
       accept: "*/*",
@@ -96,33 +94,29 @@ class HumanityClient {
     };
   }
 
-  // 倒计时
   async countdown(seconds) {
     await timer.start(seconds, {
-      message: colors.style("剩余时间: ", "timerCount"),
+      message: colors.style("Time remaining: ", "timerCount"),
       format: "HH:mm:ss",
     });
   }
 
-  // 格式化私钥
   formatPrivateKey(privateKey) {
     const trimmed = privateKey.trim();
     return trimmed.startsWith("0x") ? trimmed : `0x${trimmed}`;
   }
 
-  // 掩码地址
+  // Utility method to mask sensitive data
   maskAddress(address) {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
-  // 掩码交易哈希
   maskTxHash(hash) {
     if (!hash) return "";
     return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
   }
 
-  // 加载钱包
   async loadWallets() {
     const privateFile = path.join(__dirname, "data.txt");
 
@@ -146,20 +140,19 @@ class HumanityClient {
 
       logger.info(
         colors.style(
-          `成功加载 ${wallets.length} 个钱包`,
+          `Successfully loaded ${wallets.length} wallets`,
           "accountInfo"
         )
       );
       return wallets;
     } catch (error) {
       logger.error(
-        colors.style(`加载钱包失败: ${error.message}`, "accountError")
+        colors.style(`Failed to load wallets: ${error.message}`, "accountError")
       );
       process.exit(1);
     }
   }
 
-  // 获取余额
   async getBalance(address) {
     try {
       const balance = await this.web3.eth.getBalance(address);
@@ -169,7 +162,6 @@ class HumanityClient {
     }
   }
 
-  // 获取安全油价
   async getSafeGasPrice() {
     try {
       const gasPrice = await this.web3.eth.getGasPrice();
@@ -185,17 +177,16 @@ class HumanityClient {
     }
   }
 
-  // 记录交易详情
   logTransactionDetails(tx, gasPrice) {
-    logger.info(colors.style("交易详情:", "menuTitle"));
+    logger.info(colors.style("Transaction details:", "menuTitle"));
     logger.info(
-      `${colors.style(">", "menuBorder")} 油价: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas Price: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas 限制: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas Limit: ${colors.style(
         tx.gas,
         "value"
       )}`
@@ -208,29 +199,28 @@ class HumanityClient {
     );
   }
 
-  // 记录桥接交易详情
   logBridgeDetails(tx, gasPrice, params) {
-    logger.info(colors.style("桥接详情:", "menuTitle"));
+    logger.info(colors.style("Bridge details:", "menuTitle"));
     logger.info(
-      `${colors.style(">", "menuBorder")} 桥接金额: ${colors.style(
+      `${colors.style(">", "menuBorder")} Bridge Amount: ${colors.style(
         `${this.web3.utils.fromWei(params.amount, "ether")} ETH`,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} 油价: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas Price: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas 限制: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas Limit: ${colors.style(
         tx.gas,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} 目标地址: ${colors.style(
+      `${colors.style(">", "menuBorder")} Destination: ${colors.style(
         this.maskAddress(params.destinationAddress),
         "value"
       )}`
@@ -243,7 +233,6 @@ class HumanityClient {
     );
   }
 
-  // 申请奖励
   async claimTHP(address) {
     try {
       const response = await axios.post(
@@ -251,49 +240,299 @@ class HumanityClient {
         { address },
         { headers: this.headers }
       );
-      if (response.data.status === "success") {
-        logger.info(colors.style("成功申请奖励", "rewardSuccess"));
-      } else {
-        logger.error(colors.style("申请奖励失败", "rewardError"));
+
+      if (response.status === 200 && response.data.msg) {
+        const txHash = response.data.msg.split("Txhash: ")[1];
+        return { success: true, txHash };
       }
+      return { success: false, error: "Invalid response format" };
     } catch (error) {
-      logger.error(colors.style(`申请奖励失败: ${error.message}`, "rewardError"));
+      return { success: false, error: error.message };
     }
   }
 
-  // 自动桥接
-  async bridgeFunds(wallet, amount) {
+  async claimReward(privateKey, address) {
     try {
+      // Check balance
+      const balance = await this.getBalance(address);
+      if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_REWARD) {
+        return {
+          success: false,
+          error: `Insufficient balance: ${balance} THP`,
+        };
+      }
+
+      // Setup transaction parameters
       const gasPrice = await this.getSafeGasPrice();
-      const params = {
-        destinationNetwork: 1,
-        destinationAddress: wallet.address,
-        amount: this.web3.utils.toWei(amount, "ether"),
-        token: "0xC8D45b05b7dD0C3E61a39661B2617FE1B5509B04", // 使用的代币合约地址
-        forceUpdateGlobalExitRoot: true,
-        permitData: "0x", // 此处可以填写额外参数
+      logger.info(
+        colors.style(
+          `Using gas price: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          "info"
+        )
+      );
+
+      // Add account to wallet
+      const account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
+      this.web3.eth.accounts.wallet.add(account);
+
+      // Check if reward is available
+      try {
+        await this.contract.methods.claimReward().call({ from: address });
+      } catch (error) {
+        if (error.message.includes("revert")) {
+          return {
+            success: false,
+            error: "Reward not available or already claimed",
+          };
+        }
+      }
+
+      // Estimate gas limit
+      let gasLimit;
+      try {
+        gasLimit = await this.contract.methods.claimReward().estimateGas({
+          from: address,
+          gasPrice: gasPrice,
+        });
+        gasLimit = Math.floor(
+          Number(gasLimit) * CONSTANTS.GAS_LIMIT_MULTIPLIER
+        ).toString();
+      } catch (error) {
+        logger.warn(
+          colors.style("Gas estimation failed, using default value", "warning")
+        );
+        gasLimit = CONSTANTS.DEFAULT_GAS_LIMIT;
+      }
+
+      // Build transaction
+      const tx = {
+        from: address,
+        to: CONSTANTS.CONTRACT_ADDRESS,
+        gas: gasLimit,
+        gasPrice: gasPrice,
+        data: this.contract.methods.claimReward().encodeABI(),
+        nonce: await this.web3.eth.getTransactionCount(address),
       };
 
-      const tx = {
-        from: wallet.address,
-        to: CONSTANTS.BRIDGE_CONTRACT,
-        data: this.bridgeContract.methods.bridgeAsset(...Object.values(params)).encodeABI(),
-        gasPrice,
-        gas: CONSTANTS.DEFAULT_GAS_LIMIT,
+      this.logTransactionDetails(tx, gasPrice);
+
+      // Sign and send transaction
+      const signedTx = await this.web3.eth.accounts.signTransaction(
+        tx,
+        privateKey
+      );
+      const receipt = await this.web3.eth.sendSignedTransaction(
+        signedTx.rawTransaction
+      );
+
+      return receipt.status
+        ? { success: true, txHash: receipt.transactionHash }
+        : { success: false, error: "Transaction failed" };
+    } catch (error) {
+      logger.error(colors.style(`Detailed error: ${error.message}`, "error"));
+      return { success: false, error: `Transaction failed: ${error.message}` };
+    }
+  }
+
+  async bridgeAssets(privateKey, address) {
+    try {
+      const balance = await this.getBalance(address);
+      if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_BRIDGE) {
+        return {
+          success: false,
+          error: `Insufficient balance: ${balance} ETH`,
+        };
+      }
+
+      const gasPrice = await this.getSafeGasPrice();
+      logger.info(
+        colors.style(
+          `Using gas price: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          "info"
+        )
+      );
+
+      const account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
+      this.web3.eth.accounts.wallet.add(account);
+
+      const bridgeParams = {
+        destinationNetwork: 0,
+        destinationAddress: address,
+        amount: CONSTANTS.BRIDGE_AMOUNT,
+        token: "0x0000000000000000000000000000000000000000",
+        forceUpdateGlobalExitRoot: true,
+        permitData: "0x",
       };
+
+      let gasLimit;
+      try {
+        gasLimit = await this.bridgeContract.methods
+          .bridgeAsset(...Object.values(bridgeParams))
+          .estimateGas({
+            from: address,
+            value: bridgeParams.amount,
+          });
+        gasLimit = Math.floor(
+          Number(gasLimit) * CONSTANTS.GAS_LIMIT_MULTIPLIER
+        ).toString();
+      } catch (error) {
+        logger.warn(
+          colors.style("Gas estimation failed, using default value", "warning")
+        );
+        gasLimit = CONSTANTS.DEFAULT_GAS_LIMIT;
+      }
+
+      const tx = {
+        from: address,
+        to: CONSTANTS.BRIDGE_CONTRACT,
+        gas: gasLimit,
+        gasPrice: gasPrice,
+        value: bridgeParams.amount,
+        data: this.bridgeContract.methods
+          .bridgeAsset(...Object.values(bridgeParams))
+          .encodeABI(),
+        nonce: await this.web3.eth.getTransactionCount(address),
+      };
+
+      this.logBridgeDetails(tx, gasPrice, bridgeParams);
 
       const signedTx = await this.web3.eth.accounts.signTransaction(
         tx,
-        wallet.privateKey
+        privateKey
+      );
+      const receipt = await this.web3.eth.sendSignedTransaction(
+        signedTx.rawTransaction
       );
 
-      const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-      this.logBridgeDetails(receipt, gasPrice, params);
+      return receipt.status
+        ? { success: true, txHash: receipt.transactionHash }
+        : { success: false, error: "Transaction failed" };
     } catch (error) {
-      logger.error(colors.style(`桥接失败: ${error.message}`, "bridgeError"));
+      logger.error(colors.style(`Detailed error: ${error.message}`, "error"));
+      return { success: false, error: `Transaction failed: ${error.message}` };
+    }
+  }
+
+  async main() {
+    displayBanner();
+    const wallets = await this.loadWallets();
+
+    while (true) {
+      for (let i = 0; i < wallets.length; i++) {
+        const { address, privateKey } = wallets[i];
+        const maskedAddress = this.maskAddress(address);
+
+        logger.info(
+          `${colors.style("Processing Wallet", "label")} ${colors.style(
+            (i + 1).toString(),
+            "value"
+          )} | ${colors.style(maskedAddress, "accountName")}`
+        );
+
+        const balance = await this.getBalance(address);
+        logger.info(
+          `${colors.style("Current balance:", "label")} ${colors.style(
+            `${balance} THP`,
+            "value"
+          )}`
+        );
+
+        // Claim THP
+        const claimResult = await this.claimTHP(address);
+        if (claimResult.success) {
+          logger.success(
+            `${colors.style(
+              "THP claim successful",
+              "txSuccess"
+            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+              this.maskTxHash(claimResult.txHash),
+              "txHash"
+            )}`
+          );
+        } else {
+          logger.error(
+            `${colors.style("THP claim failed:", "txFailed")} ${colors.style(
+              claimResult.error,
+              "error"
+            )}`
+          );
+        }
+
+        await this.countdown(10);
+
+        // Claim Reward
+        const rewardResult = await this.claimReward(privateKey, address);
+        if (rewardResult.success) {
+          logger.success(
+            `${colors.style(
+              "Reward claim successful",
+              "txSuccess"
+            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+              this.maskTxHash(rewardResult.txHash),
+              "txHash"
+            )}`
+          );
+        } else {
+          logger.error(
+            `${colors.style("Reward claim failed:", "txFailed")} ${colors.style(
+              rewardResult.error,
+              "error"
+            )}`
+          );
+        }
+
+        await this.countdown(3);
+
+        // Bridge Assets
+        const bridgeResult = await this.bridgeAssets(privateKey, address);
+        if (bridgeResult.success) {
+          logger.success(
+            `${colors.style(
+              "Asset bridge successful",
+              "txSuccess"
+            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+              this.maskTxHash(bridgeResult.txHash),
+              "txHash"
+            )}`
+          );
+        } else {
+          logger.error(
+            `${colors.style("Asset bridge failed:", "txFailed")} ${colors.style(
+              bridgeResult.error,
+              "error"
+            )}`
+          );
+        }
+
+        logger.info(colors.style("Waiting for next wallet...", "waiting"));
+        await new Promise((resolve) =>
+          setTimeout(resolve, CONSTANTS.WAIT_BETWEEN_WALLETS)
+        );
+      }
+
+      logger.info(
+        colors.style(
+          "Completed processing all wallets. Waiting for next round...",
+          "complete"
+        )
+      );
+      await this.countdown(CONSTANTS.WAIT_BETWEEN_ROUNDS);
     }
   }
 }
 
-module.exports = HumanityClient;
+// Error handling wrapper for main execution
+process.on("unhandledRejection", (error) => {
+  logger.error(
+    colors.style(`Unhandled promise rejection: ${error.message}`, "error")
+  );
+  process.exit(1);
+});
+
+// Initialize and run the client
+const client = new HumanityClient();
+client.main().catch((err) => {
+  logger.error(colors.style(err.message, "error"));
+  process.exit(1);
+});
 

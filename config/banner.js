@@ -1,7 +1,6 @@
+import chalk from "chalk"; 
 
-const chalk = require("chalk"); 
-
-const { ColorTheme } = require("./colors");
+import { ColorTheme } from "./config/colors"; 
 const colors = new ColorTheme();
 
 function displayHeader() {
@@ -13,4 +12,4 @@ function displayHeader() {
     console.log();  // 添加额外空行以分隔内容
 }
 
-module.exports = displayHeader;
+export default displayHeader; // 使用 export 替代 module.exports

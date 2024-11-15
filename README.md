@@ -51,7 +51,7 @@ PRIVATE_KEY_2
 启动项目
 在项目根目录下运行以下命令启动自动领取奖励的程序：
 ```bash
-npm start
+node main.js
 ```
 程序将执行以下流程：
 

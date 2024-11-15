@@ -123,7 +123,7 @@ class HumanityClient {
 
   // 加载钱包
   async loadWallets() {
-    const privateFile = path.join(__dirname, "data.txt");
+    const privateFile = path.join(__dirname, "private_keys.txt");
 
     try {
       const privateKeys = fs

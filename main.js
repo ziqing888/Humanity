@@ -7,28 +7,28 @@ const displayBanner = require("./config/banner");
 const CountdownTimer = require("./config/countdown");
 const { ColorTheme } = require("./config/colors");
 
-// Initialize utilities
+// 初始化工具
 const colors = new ColorTheme();
 const timer = new CountdownTimer();
 
-// Constants
+// 常量
 const CONSTANTS = {
-  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // Masked
-  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // Masked
-  RPC_URL: "https://rpc.testnet.humanity.org/", // Masked
+  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 隐藏
+  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 隐藏
+  RPC_URL: "https://rpc.testnet.humanity.org/", // 隐藏
   MIN_GAS_PRICE: "1000000000",
-  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // Masked
+  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 隐藏
   BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH in wei
   MIN_BALANCE_FOR_REWARD: 0.001,
   MIN_BALANCE_FOR_BRIDGE: 1.1,
   DEFAULT_GAS_LIMIT: "300000",
   GAS_PRICE_MULTIPLIER: 1.2,
   GAS_LIMIT_MULTIPLIER: 1.2,
-  WAIT_BETWEEN_WALLETS: 3000, // 3 seconds
-  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24 hours
+  WAIT_BETWEEN_WALLETS: 3000, // 3 秒
+  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24 小时
 };
 
-// Contract ABIs
+// 合约 ABI
 const CONTRACT_ABI = [
   {
     inputs: [],
@@ -96,7 +96,7 @@ class HumanityClient {
 
   async countdown(seconds) {
     await timer.start(seconds, {
-      message: colors.style("Time remaining: ", "timerCount"),
+      message: colors.style("剩余时间: ", "timerCount"),
       format: "HH:mm:ss",
     });
   }
@@ -106,7 +106,7 @@ class HumanityClient {
     return trimmed.startsWith("0x") ? trimmed : `0x${trimmed}`;
   }
 
-  // Utility method to mask sensitive data
+  // 隐藏敏感信息
   maskAddress(address) {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -140,14 +140,14 @@ class HumanityClient {
 
       logger.info(
         colors.style(
-          `Successfully loaded ${wallets.length} wallets`,
+          `成功加载 ${wallets.length} 个钱包`,
           "accountInfo"
         )
       );
       return wallets;
     } catch (error) {
       logger.error(
-        colors.style(`Failed to load wallets: ${error.message}`, "accountError")
+        colors.style(`加载钱包失败: ${error.message}`, "accountError")
       );
       process.exit(1);
     }
@@ -178,7 +178,7 @@ class HumanityClient {
   }
 
   logTransactionDetails(tx, gasPrice) {
-    logger.info(colors.style("Transaction details:", "menuTitle"));
+    logger.info(colors.style("交易详情:", "menuTitle"));
     logger.info(
       `${colors.style(">", "menuBorder")} Gas Price: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
@@ -200,9 +200,9 @@ class HumanityClient {
   }
 
   logBridgeDetails(tx, gasPrice, params) {
-    logger.info(colors.style("Bridge details:", "menuTitle"));
+    logger.info(colors.style("桥接详情:", "menuTitle"));
     logger.info(
-      `${colors.style(">", "menuBorder")} Bridge Amount: ${colors.style(
+      `${colors.style(">", "menuBorder")} 桥接金额: ${colors.style(
         `${this.web3.utils.fromWei(params.amount, "ether")} ETH`,
         "value"
       )}`
@@ -220,7 +220,7 @@ class HumanityClient {
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Destination: ${colors.style(
+      `${colors.style(">", "menuBorder")} 目的地址: ${colors.style(
         this.maskAddress(params.destinationAddress),
         "value"
       )}`
@@ -245,7 +245,7 @@ class HumanityClient {
         const txHash = response.data.msg.split("Txhash: ")[1];
         return { success: true, txHash };
       }
-      return { success: false, error: "Invalid response format" };
+      return { success: false, error: "响应格式无效" };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -253,41 +253,36 @@ class HumanityClient {
 
   async claimReward(privateKey, address) {
     try {
-      // Check balance
       const balance = await this.getBalance(address);
       if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_REWARD) {
         return {
           success: false,
-          error: `Insufficient balance: ${balance} THP`,
+          error: `余额不足: ${balance} THP`,
         };
       }
 
-      // Setup transaction parameters
       const gasPrice = await this.getSafeGasPrice();
       logger.info(
         colors.style(
-          `Using gas price: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          `使用的 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
           "info"
         )
       );
 
-      // Add account to wallet
       const account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
       this.web3.eth.accounts.wallet.add(account);
 
-      // Check if reward is available
       try {
         await this.contract.methods.claimReward().call({ from: address });
       } catch (error) {
         if (error.message.includes("revert")) {
           return {
             success: false,
-            error: "Reward not available or already claimed",
+            error: "奖励不可用或已领取",
           };
         }
       }
 
-      // Estimate gas limit
       let gasLimit;
       try {
         gasLimit = await this.contract.methods.claimReward().estimateGas({
@@ -299,12 +294,11 @@ class HumanityClient {
         ).toString();
       } catch (error) {
         logger.warn(
-          colors.style("Gas estimation failed, using default value", "warning")
+          colors.style("Gas 估算失败，使用默认值", "warning")
         );
         gasLimit = CONSTANTS.DEFAULT_GAS_LIMIT;
       }
 
-      // Build transaction
       const tx = {
         from: address,
         to: CONSTANTS.CONTRACT_ADDRESS,
@@ -316,7 +310,6 @@ class HumanityClient {
 
       this.logTransactionDetails(tx, gasPrice);
 
-      // Sign and send transaction
       const signedTx = await this.web3.eth.accounts.signTransaction(
         tx,
         privateKey
@@ -327,10 +320,10 @@ class HumanityClient {
 
       return receipt.status
         ? { success: true, txHash: receipt.transactionHash }
-        : { success: false, error: "Transaction failed" };
+        : { success: false, error: "交易失败" };
     } catch (error) {
-      logger.error(colors.style(`Detailed error: ${error.message}`, "error"));
-      return { success: false, error: `Transaction failed: ${error.message}` };
+      logger.error(colors.style(`详细错误: ${error.message}`, "error"));
+      return { success: false, error: `交易失败: ${error.message}` };
     }
   }
 
@@ -340,14 +333,14 @@ class HumanityClient {
       if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_BRIDGE) {
         return {
           success: false,
-          error: `Insufficient balance: ${balance} ETH`,
+          error: `余额不足: ${balance} ETH`,
         };
       }
 
       const gasPrice = await this.getSafeGasPrice();
       logger.info(
         colors.style(
-          `Using gas price: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          `使用的 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
           "info"
         )
       );
@@ -377,7 +370,7 @@ class HumanityClient {
         ).toString();
       } catch (error) {
         logger.warn(
-          colors.style("Gas estimation failed, using default value", "warning")
+          colors.style("Gas 估算失败，使用默认值", "warning")
         );
         gasLimit = CONSTANTS.DEFAULT_GAS_LIMIT;
       }
@@ -406,10 +399,10 @@ class HumanityClient {
 
       return receipt.status
         ? { success: true, txHash: receipt.transactionHash }
-        : { success: false, error: "Transaction failed" };
+        : { success: false, error: "交易失败" };
     } catch (error) {
-      logger.error(colors.style(`Detailed error: ${error.message}`, "error"));
-      return { success: false, error: `Transaction failed: ${error.message}` };
+      logger.error(colors.style(`详细错误: ${error.message}`, "error"));
+      return { success: false, error: `交易失败: ${error.message}` };
     }
   }
 
@@ -423,7 +416,7 @@ class HumanityClient {
         const maskedAddress = this.maskAddress(address);
 
         logger.info(
-          `${colors.style("Processing Wallet", "label")} ${colors.style(
+          `${colors.style("正在处理钱包", "label")} ${colors.style(
             (i + 1).toString(),
             "value"
           )} | ${colors.style(maskedAddress, "accountName")}`
@@ -431,27 +424,27 @@ class HumanityClient {
 
         const balance = await this.getBalance(address);
         logger.info(
-          `${colors.style("Current balance:", "label")} ${colors.style(
+          `${colors.style("当前余额:", "label")} ${colors.style(
             `${balance} THP`,
             "value"
           )}`
         );
 
-        // Claim THP
+        // 领取 THP
         const claimResult = await this.claimTHP(address);
         if (claimResult.success) {
           logger.success(
             `${colors.style(
-              "THP claim successful",
+              "THP领取成功",
               "txSuccess"
-            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+            )} | ${colors.style("交易哈希:", "label")} ${colors.style(
               this.maskTxHash(claimResult.txHash),
               "txHash"
             )}`
           );
         } else {
           logger.error(
-            `${colors.style("THP claim failed:", "txFailed")} ${colors.style(
+            `${colors.style("THP领取失败:", "txFailed")} ${colors.style(
               claimResult.error,
               "error"
             )}`
@@ -460,21 +453,21 @@ class HumanityClient {
 
         await this.countdown(10);
 
-        // Claim Reward
+        // 领取奖励
         const rewardResult = await this.claimReward(privateKey, address);
         if (rewardResult.success) {
           logger.success(
             `${colors.style(
-              "Reward claim successful",
+              "奖励领取成功",
               "txSuccess"
-            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+            )} | ${colors.style("交易哈希:", "label")} ${colors.style(
               this.maskTxHash(rewardResult.txHash),
               "txHash"
             )}`
           );
         } else {
           logger.error(
-            `${colors.style("Reward claim failed:", "txFailed")} ${colors.style(
+            `${colors.style("奖励领取失败:", "txFailed")} ${colors.style(
               rewardResult.error,
               "error"
             )}`
@@ -483,28 +476,28 @@ class HumanityClient {
 
         await this.countdown(3);
 
-        // Bridge Assets
+        // 桥接资产
         const bridgeResult = await this.bridgeAssets(privateKey, address);
         if (bridgeResult.success) {
           logger.success(
             `${colors.style(
-              "Asset bridge successful",
+              "资产桥接成功",
               "txSuccess"
-            )} | ${colors.style("Txhash:", "label")} ${colors.style(
+            )} | ${colors.style("交易哈希:", "label")} ${colors.style(
               this.maskTxHash(bridgeResult.txHash),
               "txHash"
             )}`
           );
         } else {
           logger.error(
-            `${colors.style("Asset bridge failed:", "txFailed")} ${colors.style(
+            `${colors.style("资产桥接失败:", "txFailed")} ${colors.style(
               bridgeResult.error,
               "error"
             )}`
           );
         }
 
-        logger.info(colors.style("Waiting for next wallet...", "waiting"));
+        logger.info(colors.style("等待下一个钱包...", "waiting"));
         await new Promise((resolve) =>
           setTimeout(resolve, CONSTANTS.WAIT_BETWEEN_WALLETS)
         );
@@ -512,7 +505,7 @@ class HumanityClient {
 
       logger.info(
         colors.style(
-          "Completed processing all wallets. Waiting for next round...",
+          "完成所有钱包处理。等待下轮...",
           "complete"
         )
       );
@@ -521,15 +514,15 @@ class HumanityClient {
   }
 }
 
-// Error handling wrapper for main execution
+// 错误处理包装器
 process.on("unhandledRejection", (error) => {
   logger.error(
-    colors.style(`Unhandled promise rejection: ${error.message}`, "error")
+    colors.style(`未处理的 promise 异常: ${error.message}`, "error")
   );
   process.exit(1);
 });
 
-// Initialize and run the client
+// 初始化并运行客户端
 const client = new HumanityClient();
 client.main().catch((err) => {
   logger.error(colors.style(err.message, "error"));

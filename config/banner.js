@@ -1,27 +1,54 @@
 const figlet = require("figlet");
 const { ColorTheme } = require("./colors");
 
-const colors = new ColorTheme();
+class BannerDisplay {
+  constructor() {
+    this.colors = new ColorTheme();
+    this.config = {
+      font: "Slant", 
+      horizontalLayout: "fitted",
+      verticalLayout: "fitted",
+      width: 80,
+      separator: "─✦─".repeat(15), 
+    };
+  }
+
+  createArtText(text) {
+    return figlet.textSync(text, this.config);
+  }
+
+  formatLine(text, style, padding = false) {
+    const formatted = this.colors.style(text, style);
+    return padding ? ` ${formatted} ` : formatted;
+  }
+
+  display() {
+    const bannerContent = [
+      // 顶部装饰
+      this.formatLine(" ", "border"), 
+      
+      // 主标题
+      this.formatLine(this.createArtText("Humanity BOT"), "header"),
+      
+      // 分隔线
+      this.formatLine(this.config.separator, "border", true),
+      
+      // 信息区域
+      this.formatLine("✧ 作者: 子清", "accent", true),
+      this.formatLine("✧ X: ", "link", true),
+      
+      // 底部装饰
+      this.formatLine(this.config.separator, "border", true),
+      "" // 底部空行
+    ];
+
+    console.log(bannerContent.join("\n"));
+  }
+}
 
 function displayBanner() {
-  // 使用 figlet 库生成横幅文字
-  const banner = figlet.textSync("Humanity BOT", {
-    font: "ANSI Shadow", // 设置字体
-    horizontalLayout: "default", // 水平布局方式
-    verticalLayout: "default", // 垂直布局方式
-    width: 100, // 设置横幅宽度
-  });
-
-  // 输出横幅的样式
-  console.log(colors.style(banner, "header"));
-  console.log(
-    colors.style("===============================================", "border") // 输出分隔符
-  );
-  console.log(colors.style("编写者: 子清", "link")); // 输出编写者信息
-  console.log(colors.style("电报频道: https://t.me/ksqxszq", "link")); // 输出电报频道链接
-  console.log(
-    colors.style("===============================================\n", "border") // 输出分隔符
-  );
+  const banner = new BannerDisplay();
+  banner.display();
 }
 
 module.exports = displayBanner;

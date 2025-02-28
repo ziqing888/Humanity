@@ -13,19 +13,19 @@ const timer = new CountdownTimer();
 
 // 常量
 const CONSTANTS = {
-  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 隐藏
-  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 隐藏
-  RPC_URL: "https://rpc.testnet.humanity.org/", // 隐藏
+  CONTRACT_ADDRESS: "0xa18f6FCB2Fd4884436d10610E69DB7BFa1bFe8C7", // 已掩码
+  BRIDGE_CONTRACT: "0x5F7CaE7D1eFC8cC05da97D988cFFC253ce3273eF", // 已掩码
+  RPC_URL: "https://rpc.testnet.humanity.org/", // 已掩码
   MIN_GAS_PRICE: "1000000000",
-  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 隐藏
-  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH in wei
+  FAUCET_URL: "https://faucet.testnet.humanity.org/api/claim", // 已掩码
+  BRIDGE_AMOUNT: "1000000000000000000", // 1 ETH（单位：wei）
   MIN_BALANCE_FOR_REWARD: 0.001,
   MIN_BALANCE_FOR_BRIDGE: 1.1,
   DEFAULT_GAS_LIMIT: "300000",
   GAS_PRICE_MULTIPLIER: 1.2,
   GAS_LIMIT_MULTIPLIER: 1.2,
-  WAIT_BETWEEN_WALLETS: 3000, // 3 秒
-  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24 小时
+  WAIT_BETWEEN_WALLETS: 3000, // 3秒
+  WAIT_BETWEEN_ROUNDS: 24 * 60 * 60, // 24小时
 };
 
 // 合约 ABI
@@ -106,7 +106,7 @@ class HumanityClient {
     return trimmed.startsWith("0x") ? trimmed : `0x${trimmed}`;
   }
 
-  // 隐藏敏感信息
+  // 工具方法：掩码敏感数据
   maskAddress(address) {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -118,7 +118,7 @@ class HumanityClient {
   }
 
   async loadWallets() {
-    const privateFile = path.join(__dirname, "private_keys.txt");
+    const privateFile = path.join(__dirname, "data.txt");
 
     try {
       const privateKeys = fs
@@ -139,10 +139,7 @@ class HumanityClient {
       });
 
       logger.info(
-        colors.style(
-          `成功加载 ${wallets.length} 个钱包`,
-          "accountInfo"
-        )
+        colors.style(`成功加载 ${wallets.length} 个钱包`, "accountInfo")
       );
       return wallets;
     } catch (error) {
@@ -180,13 +177,13 @@ class HumanityClient {
   logTransactionDetails(tx, gasPrice) {
     logger.info(colors.style("交易详情:", "menuTitle"));
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas Price: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas 价格: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas Limit: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas 限制: ${colors.style(
         tx.gas,
         "value"
       )}`
@@ -208,19 +205,19 @@ class HumanityClient {
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas Price: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas 价格: ${colors.style(
         `${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} Gas Limit: ${colors.style(
+      `${colors.style(">", "menuBorder")} Gas 限制: ${colors.style(
         tx.gas,
         "value"
       )}`
     );
     logger.info(
-      `${colors.style(">", "menuBorder")} 目的地址: ${colors.style(
+      `${colors.style(">", "menuBorder")} 目标地址: ${colors.style(
         this.maskAddress(params.destinationAddress),
         "value"
       )}`
@@ -253,6 +250,7 @@ class HumanityClient {
 
   async claimReward(privateKey, address) {
     try {
+      // 检查余额
       const balance = await this.getBalance(address);
       if (parseFloat(balance) < CONSTANTS.MIN_BALANCE_FOR_REWARD) {
         return {
@@ -261,28 +259,32 @@ class HumanityClient {
         };
       }
 
+      // 设置交易参数
       const gasPrice = await this.getSafeGasPrice();
       logger.info(
         colors.style(
-          `使用的 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          `使用 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
           "info"
         )
       );
 
+      // 添加账户到钱包
       const account = this.web3.eth.accounts.privateKeyToAccount(privateKey);
       this.web3.eth.accounts.wallet.add(account);
 
+      // 检查奖励是否可用
       try {
         await this.contract.methods.claimReward().call({ from: address });
       } catch (error) {
         if (error.message.includes("revert")) {
           return {
             success: false,
-            error: "奖励不可用或已领取",
+            error: "奖励不可用或已被领取",
           };
         }
       }
 
+      // 估算 Gas 限制
       let gasLimit;
       try {
         gasLimit = await this.contract.methods.claimReward().estimateGas({
@@ -299,6 +301,7 @@ class HumanityClient {
         gasLimit = CONSTANTS.DEFAULT_GAS_LIMIT;
       }
 
+      // 构建交易
       const tx = {
         from: address,
         to: CONSTANTS.CONTRACT_ADDRESS,
@@ -310,6 +313,7 @@ class HumanityClient {
 
       this.logTransactionDetails(tx, gasPrice);
 
+      // 签名并发送交易
       const signedTx = await this.web3.eth.accounts.signTransaction(
         tx,
         privateKey
@@ -340,7 +344,7 @@ class HumanityClient {
       const gasPrice = await this.getSafeGasPrice();
       logger.info(
         colors.style(
-          `使用的 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
+          `使用 Gas 价格: ${this.web3.utils.fromWei(gasPrice, "gwei")} gwei`,
           "info"
         )
       );
@@ -416,7 +420,7 @@ class HumanityClient {
         const maskedAddress = this.maskAddress(address);
 
         logger.info(
-          `${colors.style("正在处理钱包", "label")} ${colors.style(
+          `${colors.style("处理钱包", "label")} ${colors.style(
             (i + 1).toString(),
             "value"
           )} | ${colors.style(maskedAddress, "accountName")}`
@@ -435,7 +439,7 @@ class HumanityClient {
         if (claimResult.success) {
           logger.success(
             `${colors.style(
-              "THP领取成功",
+              "THP 领取成功",
               "txSuccess"
             )} | ${colors.style("交易哈希:", "label")} ${colors.style(
               this.maskTxHash(claimResult.txHash),
@@ -444,7 +448,7 @@ class HumanityClient {
           );
         } else {
           logger.error(
-            `${colors.style("THP领取失败:", "txFailed")} ${colors.style(
+            `${colors.style("THP 领取失败:", "txFailed")} ${colors.style(
               claimResult.error,
               "error"
             )}`
@@ -505,7 +509,7 @@ class HumanityClient {
 
       logger.info(
         colors.style(
-          "完成所有钱包处理。等待下轮...",
+          "完成所有钱包的处理，等待下一轮...",
           "complete"
         )
       );
@@ -517,7 +521,7 @@ class HumanityClient {
 // 错误处理包装器
 process.on("unhandledRejection", (error) => {
   logger.error(
-    colors.style(`未处理的 promise 异常: ${error.message}`, "error")
+    colors.style(`未处理的 Promise 拒绝: ${error.message}`, "error")
   );
   process.exit(1);
 });
